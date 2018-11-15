@@ -163,17 +163,20 @@ class Timer(Entity):
         # pylint: disable=redefined-outer-name
         start = dt_util.utcnow()
         if self._remaining and newduration is None:
-            self._end = start + self._remaining
+            self._remaining = self._duration
         else:
             if newduration:
                 self._duration = newduration
                 self._remaining = newduration
             else:
                 self._remaining = self._duration
-            self._end = start + self._duration
+        self._end = start + self._duration
         self._listener = async_track_point_in_utc_time(self._hass,
                                                        self.async_finished,
                                                        self._end)
+        self._state = STATUS_PAUSED
+        yield from self.async_update_ha_state()
+        self._state = STATUS_ACTIVE
         await self.async_update_ha_state()
 
     async def async_pause(self):
